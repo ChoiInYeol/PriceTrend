@@ -278,8 +278,9 @@ class GenerateStockData(object):
         }
         data_dict["image"] = np.empty(
             [len(self.stock_id_list) * 60, self.width * self.height],
-            dtype=np.float32,
+            dtype=dtype_dict["image"],
         )
+        data_dict["image"] = data_dict["image"].astype(float)
         data_dict["image"].fill(np.nan)
 
         sample_num = 0

@@ -16,9 +16,9 @@ def get_processed_US_data_by_year(year):
 
 
 def get_spy_freq_rets(freq):
-    assert freq in ["week", "month", "quarter", "year"]
+    assert freq in ["week", "month", "quarter", 'year'], f"Invalid freq: {freq}"
     spy = pd.read_csv(
-        os.path.join(dcf.CACHE_DIR, f"Made_spy_{freq}_ret.csv"),
+        os.path.join(dcf.CACHE_DIR, f"spy_{freq}_ret.csv"),
         parse_dates=["date"],
     )
     spy.rename(columns={"date": "Date"}, inplace=True)
@@ -34,7 +34,6 @@ def get_bench_freq_rets(freq):
     bench.rename(columns={"date": "Date"}, inplace=True)
     bench = bench.set_index("Date")
     return bench
-
 
 def get_period_end_dates(period):
     assert period in ["week", "month", "quarter", "year"]
@@ -53,7 +52,7 @@ def processed_US_data():
         print(f"Finish loading processed data in {(time.time() - since) / 60:.2f} min")
         return df.copy()
 
-    raw_us_data_path = op.join(dcf.RAW_DATA_DIR, "market_Top24_CRSP_Q1filter_Datedrop_fill.csv")
+    raw_us_data_path = op.join(dcf.RAW_DATA_DIR, "00-24_UsStockData.csv")
     print("Reading raw data from {}".format(raw_us_data_path))
     since = time.time()
     df = pd.read_csv(
@@ -116,7 +115,11 @@ def process_raw_data_helper(df):
     df["MarketCap"] = np.abs(df["Close"] * df["Shares"])
     df.set_index(["Date", "StockID"], inplace=True)
     df.sort_index(inplace=True)
+    
+    # df.Ret 값이 -1에 가까울 경우, 아주 작은 양수 값으로 대체
+    df['Ret'] = df['Ret'].apply(lambda x: max(x, -0.9999))
     df["log_ret"] = np.log(1 + df.Ret)
+
     df["cum_log_ret"] = df.groupby("StockID")["log_ret"].cumsum(skipna=True)
     df["EWMA_vol"] = df.groupby("StockID")["Ret"].transform(
         lambda x: (x**2).ewm(alpha=0.05).mean().shift(periods=1)
@@ -145,7 +148,7 @@ def process_raw_data_helper(df):
 def get_period_ret(period, country="USA"):
     assert country == "USA"
     assert period in ["week", "month", "quarter"]
-    period_ret_path = op.join(dcf.CACHE_DIR, f"{period}_ret.pq")
+    period_ret_path = op.join(dcf.CACHE_DIR, f"us_{period}_ret.pq")
     period_ret = pd.read_parquet(period_ret_path)
     period_ret.set_index(["Date", "StockID"], inplace=True)
     period_ret.sort_index(inplace=True)

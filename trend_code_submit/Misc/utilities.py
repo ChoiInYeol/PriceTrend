@@ -1,4 +1,4 @@
-import pickle as pickle
+import pickle
 
 import math
 import os
@@ -36,38 +36,19 @@ def binary_one_hot(y, device=None):
     return y_onehot
 
 
-# def cross_entropy_loss(pred_prob, true_label):
-#     pred_prob = np.array(pred_prob)
-#     x = np.zeros((len(pred_prob), 2))
-#     x[:, 1] = pred_prob
-#     x[:, 0] = 1 - x[:, 1]
-#     pred_prob = x
-
-#     true_label = np.array(true_label)
-#     y = np.zeros((len(true_label), 2))
-#     y[np.arange(true_label.size), true_label] = 1
-#     true_label = y
-
-#     loss = -np.sum(true_label * np.log(pred_prob)) / len(pred_prob)
-#     return loss
-
 def cross_entropy_loss(pred_prob, true_label):
-    # Convert pred_prob to a 2-column format for binary classification
     pred_prob = np.array(pred_prob)
-    prob_matrix = np.zeros((len(pred_prob), 2))
-    prob_matrix[:, 1] = pred_prob
-    prob_matrix[:, 0] = 1 - prob_matrix[:, 1]
+    x = np.zeros((len(pred_prob), 2))
+    x[:, 1] = pred_prob
+    x[:, 0] = 1 - x[:, 1]
+    pred_prob = x
 
-    # Clip probabilities to avoid log(0)
-    prob_matrix = np.clip(prob_matrix, 1e-7, 1 - 1e-7)
-
-    # Convert true_label to a one-hot encoded format
     true_label = np.array(true_label)
-    label_matrix = np.zeros((len(true_label), 2))
-    label_matrix[np.arange(len(true_label)), true_label] = 1
+    y = np.zeros((len(true_label), 2))
+    y[np.arange(true_label.size), true_label] = 1
+    true_label = y
 
-    # Calculate the cross-entropy loss
-    loss = -np.sum(label_matrix * np.log(prob_matrix)) / len(pred_prob)
+    loss = -np.sum(true_label * np.log(pred_prob)) / len(pred_prob)
     return loss
 
 
@@ -89,42 +70,22 @@ def rank_normalization(c: pd.Series):
     return normed_rank
 
 
-# def calculate_test_log(pred_prob, label):
-#     pred = np.where(pred_prob > 0.5, 1, 0)
-#     num_samples = len(pred)
-#     TP = np.nansum(pred * label, dtype=np.int64) / num_samples
-#     TN = np.nansum((pred - 1) * (label - 1)) / num_samples
-#     FP = np.abs(np.nansum(pred * (label - 1))) / num_samples
-#     FN = np.abs(np.nansum((pred - 1) * label)) / num_samples
-#     test_log = {
-#         "diff": 1.0 * ((TP + FP) - (TN + FN)),
-#         "loss": cross_entropy_loss(pred_prob, label),
-#         "accy": 1.0 * (TP + TN),
-#         "MCC": np.nan
-#         if (TP + FP) * (TP + FN) * (TN + FP) * (TN + FN) == 0
-#         else 1.0
-#         * (TP * TN - FP * FN)
-#         / math.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN)),
-#     }
-#     return test_log
-
 def calculate_test_log(pred_prob, label):
     pred = np.where(pred_prob > 0.5, 1, 0)
     num_samples = len(pred)
-    
-    TP = np.sum(np.where((pred == 1) & (label == 1), 1, 0)) / num_samples
-    TN = np.sum(np.where((pred == 0) & (label == 0), 1, 0)) / num_samples
-    FP = np.sum(np.where((pred == 1) & (label == 0), 1, 0)) / num_samples
-    FN = np.sum(np.where((pred == 0) & (label == 1), 1, 0)) / num_samples
-    
-    mcc_denom = math.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN))
-    MCC = (TP * TN - FP * FN) / mcc_denom if mcc_denom != 0 else np.nan
-    
+    TP = np.nansum(pred * label, dtype=np.int64) / num_samples
+    TN = np.nansum((pred - 1) * (label - 1)) / num_samples
+    FP = np.abs(np.nansum(pred * (label - 1))) / num_samples
+    FN = np.abs(np.nansum((pred - 1) * label)) / num_samples
     test_log = {
-        "diff": (TP + FP) - (TN + FN),
+        "diff": 1.0 * ((TP + FP) - (TN + FN)),
         "loss": cross_entropy_loss(pred_prob, label),
-        "accy": TP + TN,
-        "MCC": MCC,
+        "accy": 1.0 * (TP + TN),
+        "MCC": np.nan
+        if (TP + FP) * (TP + FN) * (TN + FP) * (TN + FN) == 0
+        else 1.0
+        * (TP * TN - FP * FN)
+        / math.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN)),
     }
     return test_log
 

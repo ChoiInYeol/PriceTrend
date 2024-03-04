@@ -9,13 +9,15 @@ torch.set_num_threads(1)
 
 
 if __name__ == "__main__":
+    
     # Generate Image Data
-    year_list = list(range(2017, 2024))
+    year_list = list(range(2003, 2024))
     chart_type = "bar"
     ws = 20
-    freq = "week"
+    freq = "month"
     ma_lags = [ws]
     vb = True
+    
     for year in year_list:
         print(f"{ws}D {freq} {chart_type} {year}")
         dgp_obj = GenerateStockData(
@@ -30,16 +32,29 @@ if __name__ == "__main__":
             allow_tqdm=True,
             chart_type=chart_type,
         )
+        
         # generate CNN2D Data
         dgp_obj.save_annual_data()
+        
         # generate CNN1D Data
         # dgp_obj.save_annual_ts_data()
 
     # Train CNN Models for US
     # CNN2D
+    # train_us_model(
+    #     [20],
+    #     [5],
+    #     total_worker=1,
+    #     calculate_portfolio=True,
+    #     ts1d_model=False,
+    #     ts_scale="image_scale",
+    #     regression_label=None,
+    #     pf_delay_list=[0],
+    #     lr=1e-4,
+    # )
     train_us_model(
         [20],
-        [5],
+        [20],
         total_worker=1,
         calculate_portfolio=True,
         ts1d_model=False,
@@ -49,15 +64,15 @@ if __name__ == "__main__":
         lr=1e-4,
     )
     # train_us_model(
-    #     [20],
-    #     [20],
-    #     total_worker=1,
-    #     calculate_portfolio=True,
-    #     ts1d_model=False,
-    #     ts_scale="image_scale",
-    #     regression_label=None,
-    #     pf_delay_list=[0],
-    #     lr=1e-4,
+    # [60],
+    # [20],
+    # total_worker=1,
+    # calculate_portfolio=True,
+    # ts1d_model=False,
+    # ts_scale="image_scale",
+    # regression_label=None,
+    # pf_delay_list=[0],
+    # lr=1e-4,
     # )
     # train_us_model(
     #     [20],

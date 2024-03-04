@@ -764,12 +764,9 @@ class Experiment(object):
         if self.delayed_ret != 0:
             delay_list = delay_list + [self.delayed_ret]
         pf_obj = self.load_portfolio_obj(delay_list)
-    
         for delay in delay_list:
             pf_obj.generate_portfolio(delay=delay, cut=cut)
-        
         pf_obj.make_portfolio_plot(cut=cut, portfolio_ret=None)
-
     def load_portfolio_obj(
         self, delay_list=[0], load_signal=True, custom_ret=None, transaction_cost=False
     ):
@@ -929,8 +926,8 @@ class Experiment(object):
         return df.loc["Mean"]
 
     def summarize_true_up_label(self):
-        tv_df = self._df_true_up_label(list(range(2017, 2022)), "In Sample")
-        test_df = self._df_true_up_label(list(range(2022, 2024)), "OOS")
+        tv_df = self._df_true_up_label(list(range(2009, 2021)), "In Sample")
+        test_df = self._df_true_up_label(list(range(2021, 2024)), "OOS")
         df = pd.concat([tv_df, test_df])
         df.to_csv(
             os.path.join(

@@ -16,8 +16,8 @@ class PortfolioManager(object):
         signal_df: pd.DataFrame,
         freq: str,
         portfolio_dir: str,
-        start_year=2022,
-        end_year=2023,
+        start_year=2015,
+        end_year=2024,
         country="USA",
         delay_list=None,
         load_signal=True,
@@ -48,7 +48,7 @@ class PortfolioManager(object):
         signal_df = signal_df.copy()
         signal_df[columns] = period_ret[columns]
         signal_df[self.no_delay_ret_name] = signal_df[f"next_{self.freq}_ret_0delay"]
-        signal_df.dropna(inplace=True)
+        signal_df.fillna(0, inplace=True) # 의심
         for dl in self.delay_list:
             dl_ret_name = f"next_{self.freq}_ret_{dl}delay"
             print(
@@ -213,25 +213,25 @@ class PortfolioManager(object):
             print(f"Calculating {pf_name}")
             portfolio_ret, turnover = self.calculate_portfolio_rets(weight_type, cut=10, delay=0)
         
-            save_path = f"./{weight_type}.png"
-            plot_title = f'{self.freq} "plot_title" {weight_type} {cut}'
+            save_path = f"./{self.freq}_{weight_type}.png"
+            plot_title = f'{self.freq} "Re(-)Imag(in)ing Price Trend" {weight_type} {cut}'
             ret_name = "nxt_freq_ewret" if weight_type == "ew" else "nxt_freq_vwretx"
             df = portfolio_ret.copy()
             df.columns = ["Low(L)"] + [str(i) for i in range(2, cut)] + ["High(H)", "H-L"]
-            bench = eqd.get_bench_freq_rets(self.freq)
+            # bench = eqd.get_bench_freq_rets(self.freq)
             spy = eqd.get_spy_freq_rets(self.freq)
             df["SPY"] = spy[ret_name]
-            df["Benchmark"] = bench[ret_name]
+            # df["Benchmark"] = bench[ret_name]
             df.dropna(inplace=True)
             top_col_name, bottom_col_name = ("High(H)", "Low(L)")
             log_ret_df = pd.DataFrame(index=df.index)
             for column in df.columns:
                 log_ret_df[column] = self._ret_to_cum_log_ret(df[column])
             plt.figure()
-            log_ret_df = log_ret_df[[top_col_name, bottom_col_name, "H-L", "SPY", "Benchmark"]]
+            log_ret_df = log_ret_df[[top_col_name, bottom_col_name, "H-L", "SPY"]]
             prev_year = pd.to_datetime(log_ret_df.index[0]).year - 1
             prev_day = pd.to_datetime("{}-12-31".format(prev_year))
-            log_ret_df.loc[prev_day] = [0, 0, 0, 0, 0]
+            log_ret_df.loc[prev_day] = [0, 0, 0, 0]
             plot = log_ret_df.plot(
                 style={"SPY": "y", "Benchmark": "g", top_col_name: "b", bottom_col_name: "r", "H-L": "k"},
                 lw=1,

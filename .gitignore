@@ -1,2 +1,11 @@
 WORK_SPACE
 RPAA
+
+*.pyc
+.*
+_*
+
+CACHE_DIR
+*.parquet
+*/*.parquet
+must/important_data
